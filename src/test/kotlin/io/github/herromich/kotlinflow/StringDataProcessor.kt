@@ -1,6 +1,8 @@
 package io.github.herromich.kotlinflow
 
 import io.github.herromich.kotlinflow.services.DataProcessor
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
@@ -13,12 +15,13 @@ import kotlin.random.Random
 class StringDataProcessor : DataProcessor<String, String>() {
     override val dataProcessorContextName = "int-data-processor-context"
 
+    @OptIn(FlowPreview::class)
     override suspend fun Flow<IntermediateRequestHolder>.processor() = flow {
         val channel = Channel<IntermediateRequestHolder>()
         groupBy { it.hashCode() % 16 }
             .flatMapMerge(16) {
                 it.second
-                    .buffer(5000)
+                    .chuncked(5000)
                     .map { it.map { Random.nextInt(10) to it } }
                     .onEach { kotlinx.coroutines.delay((it.size * Random.nextDouble(0.005, 0.01)).toLong()) }
                     .flatMapIterable { it }
@@ -28,7 +31,7 @@ class StringDataProcessor : DataProcessor<String, String>() {
                             null
                         } else requestHolder
                     }
-                    .buffer(5000)
+                    .chuncked(5000)
                     .map { it.map { Random.nextInt(10) to it } }
                     .onEach { kotlinx.coroutines.delay((it.size * Random.nextDouble(0.05, 0.1)).toLong()) }
                     .flatMapIterable { it }
@@ -38,7 +41,7 @@ class StringDataProcessor : DataProcessor<String, String>() {
                             null
                         } else requestHolder
                     }
-                    .buffer(5000)
+                    .chuncked(5000)
                     .onEach { kotlinx.coroutines.delay((it.size * Random.nextDouble(0.05, 0.1)).toLong()) }
                     .flatMapIterable { it }
             }.merge(channel)
@@ -47,6 +50,7 @@ class StringDataProcessor : DataProcessor<String, String>() {
             }.collect()
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     private suspend fun Flow<IntermediateRequestHolder>.merge(channel: Channel<IntermediateRequestHolder>) = flow {
         GlobalScope.launch {
             onEach { channel.send(it) }

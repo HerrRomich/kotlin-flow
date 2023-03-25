@@ -29,7 +29,7 @@ class Test(
         counter.set(0)
         runBlocking {
             coroutineScope {
-                (0..2999).forEach {
+                (0..29).forEach {
                     launch {
                         process()
                     }
@@ -40,11 +40,11 @@ class Test(
 
     private suspend fun process() {
         with(stringDataProcessor) {
-            (0..Random.nextInt(10, 5000)).asFlow()
+            (0..Random.nextInt(10, 500000)).asFlow()
                 .map {
                     RandomStringUtils.randomAlphanumeric(Random.nextInt(10, 100))
                 }.onEach {
-                    if (Random.nextInt(100000) == 347)
+                    if (Random.nextInt(100000) == -347)
                         throw RuntimeException()
                 }
                 .processData({ v -> v }, { _, b -> b })

@@ -16,14 +16,14 @@ fun <T, K> Flow<T>.groupBy(getKey: (T) -> K): Flow<Pair<K, Flow<T>>> = flow {
     }.collect()
 }
 
-fun <T> Flow<T>.buffer(length: Int): Flow<List<T>> {
+fun <T> Flow<T>.chuncked(length: Int): Flow<List<T>> {
     assert(length > 0) { "Length should be greater than 0." }
     return flow {
         val list = mutableListOf<T>()
         onEach { t ->
             list += t
             if (list.size >= length) {
-                val res = list.subList(0, length - 1)
+                val res = list.subList(0, length)
                 emit(res.toList())
                 res.clear()
             }
